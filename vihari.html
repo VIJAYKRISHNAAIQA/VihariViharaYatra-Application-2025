@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VihariViharaYatra - Your Ultimate Travel Planner</title>
+    
+    <!-- FONT AWESOME for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* --- General Styling & User Request --- */
+        :root {
+            --primary-yellow: #ffc300;
+            --dark-text: #1a1a1a;
+            --white-text: #ffffff;
+            --light-gray: #f0f2f5;
+            --medium-gray: #e4e6eb;
+            --dark-gray: #8a8d91;
+            --accent-blue: #007bff;
+            --accent-red: #dc3545;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            background-color: yellow; /* User requested background */
+            color: white; /* User requested text color */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            font-size: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+        
+        /* --- Header & Navigation --- */
+        .main-header {
+            background-color: rgba(0, 0, 0, 0.7); /* Dark overlay for readability */
+            padding: 10px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary-yellow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-yellow);
+        }
+
+        .main-nav {
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 50px;
+        }
+
+        .nav-item {
+            color: var(--white-text);
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--primary-yellow);
+            color: var(--dark-text);
+        }
+        
+        /* --- Page Content Management --- */
+        .page-content {
+            display: none; /* Hide all pages by default */
+        }
+        .page-content.active {
+            display: block; /* Show only the active page */
+        }
+
+        /* --- Main Content Area --- */
+        .container {
+            width: 90%;
+            max-width: 1400px;
+            margin: 30px auto;
+            display: flex;
+            gap: 30px;
+        }
+        
+        /* --- Filters Sidebar --- */
+        .filters-sidebar {
+            flex: 0 0 280px;
+            background: rgba(0, 0, 0, 0.5); /* Dark overlay for readability */
+            padding: 20px;
+            border-radius: 12px;
+            height: fit-content;
+        }
+        
+        .filter-group {
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--dark-gray);
+            padding-bottom: 20px;
+        }
+        .filter-group:last-child {
+            border-bottom: none;
+        }
+        .filter-group h3 {
+            color: var(--primary-yellow);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        .filter-option { margin-bottom: 10px; display: flex; align-items: center; }
+        .filter-option label { margin-left: 8px; cursor: pointer; }
+        #price-slider { width: 100%; }
+        #price-value { font-weight: bold; color: var(--white-text); text-align: center; margin-top: 10px; }
+        
+        /* --- Results Area --- */
+        .results-area { flex: 1; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.5); padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; }
+        .sort-options label { margin-right: 10px; }
+        .sort-options select { padding: 8px; border-radius: 6px; border: 1px solid var(--medium-gray); }
+        #results-container { display: flex; flex-direction: column; gap: 20px; }
+
+        /* --- Generic Result Card (Flights, Buses, etc.) --- */
+        .result-card {
+            background: var(--card-bg); color: var(--dark-text); padding: 20px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 150px; align-items: center; gap: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .result-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .airline-info { display: flex; align-items: center; gap: 10px; }
+        .airline-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: contain; }
+        .airline-info .name { font-weight: 500; }
+        .airline-info .details { font-size: 0.8rem; color: var(--dark-gray); }
+        .time-info .time { font-size: 1.2rem; font-weight: bold; }
+        .time-info .city { font-size: 0.9rem; color: var(--dark-gray); }
+        .duration-info { text-align: center; }
+        .duration-info .duration { font-weight: 500; }
+        .duration-info .stops { font-size: 0.8rem; color: var(--dark-gray); position: relative; margin-top: 5px; }
+        .duration-info .stops::before { content: ''; position: absolute; width: 80%; height: 1px; background-color: var(--medium-gray); left: 10%; top: -5px; }
+        .price-info { text-align: right; }
+        .price-info .price { font-size: 1.5rem; font-weight: bold; color: var(--accent-red); }
+        .price-info .note { font-size: 0.75rem; color: var(--dark-gray); }
+        .book-button-container { text-align: center; grid-column: 5; }
+        .book-button { background-color: var(--accent-blue); color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: background-color 0.3s ease; }
+        .book-button:hover { background-color: #0056b3; }
+
+        /* --- Hotel Page Specific Styles --- */
+        #hotel-page-content { padding: 20px; background: rgba(0,0,0,0.5); border-radius: 12px; }
+        .hotel-card { background: var(--card-bg); color: var(--dark-text); padding: 20px; border-radius: 12px; display: grid; grid-template-columns: 200px 1fr 180px; gap: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .hotel-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
+        .hotel-info h3 { margin: 0 0 10px 0; color: var(--accent-blue); }
+        .star-rating { color: #f5b301; margin-bottom: 10px; }
+        .amenities { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.8rem; color: var(--dark-gray); }
+        .amenities span { background: var(--light-gray); padding: 3px 8px; border-radius: 12px; }
+        .hotel-pricing .price { font-size: 1.8rem; font-weight: bold; color: var(--accent-red); }
+        .hotel-pricing .note { font-size: 0.8rem; color: var(--dark-gray); margin-bottom: 15px; }
+
+        /* --- API Widget Styles --- */
+        .api-widgets { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .widget-card { background: rgba(0,0,0,0.5); padding: 20px; border-radius: 12px; }
+        .widget-card h3 { color: var(--primary-yellow); margin-top: 0; }
+        #weather-info, #currency-info { font-size: 1.2rem; }
+        .currency-inputs { display: flex; gap: 10px; align-items: center; margin-top: 15px; }
+        .currency-inputs input, .currency-inputs select { padding: 8px; border-radius: 6px; border: 1px solid var(--medium-gray); }
+        #currency-result { margin-top: 15px; font-weight: bold; font-size: 1.1rem; }
+
+        /* --- AI & Modal Styles --- */
+        .ai-assistant-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: linear-gradient(45deg, #6a11cb, #2575fc); color: white; border: none; border-radius: 50%; font-size: 1.8rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; z-index: 1000; transition: transform 0.3s ease; }
+        .ai-assistant-btn:hover { transform: scale(1.1); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; z-index: 2000; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { background: white; color: var(--dark-text); padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; transform: scale(0.9); transition: transform 0.3s; }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .modal-content h2 { margin-top: 0; color: var(--accent-blue); }
+        .modal-close-btn { background-color: var(--accent-red); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; float: right; }
+        #ai-query-input { width: 100%; padding: 10px; border: 1px solid var(--medium-gray); border-radius: 6px; margin-top: 15px; }
+        #ai-process-btn { background-color: var(--accent-blue); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+        #ai-response { margin-top: 15px; font-style: italic; color: var(--dark-gray); }
+
+        #no-results-message { text-align: center; padding: 50px; background: rgba(0, 0, 0, 0.4); border-radius: 12px; }
+		
+		
+		
+ body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #ffc107; /* Yellow background */
+      color: white;
+    }
+    .full-width-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h2, h3, h4, h5 {
+      color: white;
+    }
+    .page-content {
+      padding: 40px 0;
+    }
+    .bg-card {
+      background-color: rgba(255,255,255,0.1); /* translucent white over yellow */
+      border: none;
+      border-radius: 8px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .bg-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255,255,255,0.5);
+      border-top: 5px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 40px auto;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .search-bar input, .search-bar select, .search-bar button {
+      border-radius: 4px;
+      border: none;
+    }
+    .search-bar input, .search-bar select {
+      padding: 10px;
+    }
+    .search-bar button {
+      padding: 10px 20px;
+    }
+    .hotel-card-img, .holiday-card-img {
+      height: 180px;
+      object-fit: cover;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .hotel-card-body, .holiday-card-body {
+      padding: 15px;
+    }
+    .hotel-card-body .rating i, .holiday-card-body .rating i {
+      color: #ffd700;
+    }
+    .btn-book {
+      background-color: white;
+      color: #ffc107;
+      font-weight: bold;
+    }
+    .btn-book:hover {
+      background-color: #ffe58a;
+      color: #000;
+    }
+    /* Progress bars for API Dashboard */
+    .progress {
+      height: 12px;
+      background-color: rgba(255,255,255,0.3);
+    }
+    .progress-bar {
+      background-color: white;
+    }
+    @media (max-width: 768px) {
+      .search-bar {
+        flex-direction: column;
+      }
+      .search-bar > * {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
+ 
+ 
+ /* --- Holiday Packages Across India --- */
+  
+  /* --- Reset & Base Styles --- */
+  * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #FFD700;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .select-all-container:hover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .select-all-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .select-all-container label {
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+        }
+
+        .sort-container select {
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .sort-container select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bulk-delete-btn, .clear-selection-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .bulk-delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .bulk-delete-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .clear-selection-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .clear-selection-btn:hover {
+            background: #5a6268;
+        }
+
+        .bulk-delete-btn:disabled, .clear-selection-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .selected-count {
+            background: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Loader Styles */
+        .holiday-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(44,62,80,0.3);
+            border-top: 4px solid #2c3e50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Grid Layout */
+        .holiday-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        /* Card Styles */
+        .holiday-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            cursor: grab;
+            position: relative;
+            border: 3px solid transparent;
+        }
+
+        .holiday-card:active {
+            cursor: grabbing;
+        }
+
+        .holiday-card.selected {
+            border-color: #007bff;
+            box-shadow: 0 15px 35px rgba(0,123,255,0.3);
+        }
+
+        .holiday-card.dragging {
+            opacity: 0.7;
+            transform: rotate(5deg) scale(1.05);
+            z-index: 1000;
+            cursor: grabbing;
+        }
+
+        .holiday-card:hover:not(.dragging) {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-checkbox {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 20px;
+            height: 20px;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 35px;
+            height: 35px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+
+        .holiday-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+        }
+
+        .holiday-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .holiday-card-body {
+            padding: 20px;
+            padding-top: 15px;
+        }
+
+        .holiday-card h3 {
+            font-size: 1.4rem;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .location-duration {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .location-duration::before {
+            content: "📍";
+            font-size: 0.9rem;
+        }
+
+        .description {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .highlights {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffd700;
+        }
+
+        .highlights::before {
+            content: "✨ ";
+            color: #ffd700;
+        }
+
+        .price-book {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .price::before {
+            content: "₹";
+            font-size: 1.2rem;
+        }
+
+        .book-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            min-width: 100px;
+        }
+
+        .book-btn:hover {
+            background: linear-gradient(135deg, #218838 0%, #1db584 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalShow 0.3s ease;
+        }
+
+        @keyframes modalShow {
+            from { opacity: 0; transform: scale(0.7); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal h3 {
+            color: #dc3545;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .modal p {
+            margin-bottom: 25px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirm {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        /* Success/Error Messages */
+        .message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 3000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            min-width: 300px;
+        }
+
+        .message.show {
+            transform: translateX(0);
+        }
+
+        .message.success {
+            background: #28a745;
+        }
+
+        .message.error {
+            background: #dc3545;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .control-panel {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .control-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .holiday-grid-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .price-book {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .book-btn {
+                width: 100%;
+            }
+
+            .modal-content {
+                margin: 25% auto;
+                padding: 20px;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Drag and Drop Indicators */
+        .drop-zone {
+            position: relative;
+        }
+
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #007bff;
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drop-zone.drag-over::before {
+            opacity: 1;
+        }
+
+        .no-packages {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .no-packages h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+		
+    </style>
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="logo">VihariViharaYatra</div>
+        <nav class="main-nav" id="main-tabs">
+            <a class="nav-item active" data-page="search" data-vehicle="flights"><i class="fa-solid fa-plane-up"></i> Flights</a>
+            <a class="nav-item" data-page="search" data-vehicle="buses"><i class="fa-solid fa-bus-simple"></i> Buses</a>
+            <a class="nav-item" data-page="search" data-vehicle="trains"><i class="fa-solid fa-train-subway"></i> Trains</a>
+            <a class="nav-item" data-page="search" data-vehicle="cabs"><i class="fa-solid fa-taxi"></i> Cabs</a>
+            <a class="nav-item" data-page="search" data-vehicle="bikeTaxis"><i class="fa-solid fa-motorcycle"></i> Bike-Taxis</a>
+			
+            <a class="nav-item" data-page="hotels"><i class="fa-solid fa-hotel"></i> Hotels</a>
+			 <a class="nav-item" data-page="holidays"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+            <a class="nav-item" data-page="api-dashboard"><i class="fa-solid fa-tachometer-alt"></i> API Dashboard
+        </nav>
+        <div><!-- Login/User Profile --></div>
+    </header>
+
+    <main>
+        <!-- SEARCH PAGE (Flights, Buses, etc.) -->
+        <div id="search-page" class="page-content active">
+            <div class="container">
+                <aside class="filters-sidebar">
+                    <div class="filter-group">
+                        <h3>Price Range</h3>
+                        <input type="range" id="price-slider" min="1000" max="50000" step="100">
+                        <div id="price-value">Up to ₹50,000</div>
+                    </div>
+					
+					<!-- NEW: Departure Time Filter -->
+                    <div id="time-filter-group" class="filter-group">
+                        <h3>Departure Time</h3>
+                        <div class="filter-option"><input type="checkbox" id="time-morning" value="morning" checked><label for="time-morning">Morning (5am-12pm)</label></div>
+                        <div class="filter-option"><input type="checkbox" id="time-afternoon" value="afternoon" checked><label for="time-afternoon">Afternoon (12pm-5pm)</label></div>
+                        <div class="filter-option"><input type="checkbox" id="time-evening" value="evening" checked><label for="time-evening">Evening (5pm-9pm)</label></div>
+                        <div class="filter-option"><input type="checkbox" id="time-night" value="night" checked><label for="time-night">Night (9pm-5am)</label></div>
+                    </div>
+					
+                    <div class="filter-group">
+                        <h3>Stops</h3>
+                        <div class="filter-option">
+                            <input type="checkbox" id="stops-0" name="stops" value="0" checked>
+                            <label for="stops-0">Non-Stop</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="stops-1" name="stops" value="1" checked>
+                            <label for="stops-1">1 Stop</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="stops-2" name="stops" value="2" checked>
+                            <label for="stops-2">2+ Stops</label>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <h3 id="carrier-title">Airlines</h3>
+                        <div id="carrier-filters"></div>
+                    </div>
+                </aside>
+                <section class="results-area">
+                    <div class="results-header">
+                        <div id="results-summary">Showing all results</div>
+                        <div class="sort-options">
+                            <label for="sort-by">Sort by:</label>
+                            <select id="sort-by">
+                                <option value="recommended">Recommended</option>
+                                <option value="price_asc">Price (Low to High)</option>
+                                <option value="price_desc">Price (High to Low)</option>
+                                <option value="duration_asc">Duration (Shortest)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="results-container"></div>
+                    <div id="no-results-message" style="display: none;">
+                        <h3>No matching results found.</h3>
+                        <p>Try adjusting your filters for more options.</p>
+                    </div>
+                    
+                    <!-- API WIDGETS SECTION -->
+                    <div class="api-widgets">
+                        <div class="widget-card">
+                            <h3><i class="fa-solid fa-cloud-sun"></i> Live Weather in Destination (API Demo)</h3>
+                            <div id="weather-info">Fetching weather data...</div>
+                        </div>
+                        <div class="widget-card">
+                             <h3><i class="fa-solid fa-coins"></i> Currency Converter (API Demo)</h3>
+                            <div id="currency-info">Fetching rates...</div>
+                            <div class="currency-inputs">
+                                <input type="number" value="100">
+                                <select><option>USD</option></select>
+                                <span><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+                                <select><option>INR</option></select>
+                            </div>
+                            <div id="currency-result"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+<!-- OTHER PAGES -->
+        <!-- HOTELS PAGE -->
+       <!-- HOTELS PAGE -->
+ <section id="hotels-page" class="page-content">
+    <div class="full-width-container">
+      <h2>Search Hotels</h2>
+      <div class="d-flex flex-wrap align-items-center gap-2 search-bar mb-4">
+        <input type="text" class="form-control flex-grow-1" id="hotel-dest-input" placeholder="City or Hotel Name" />
+        <input type="date" class="form-control" id="hotel-checkin-input" placeholder="Check-in" />
+        <input type="date" class="form-control" id="hotel-checkout-input" placeholder="Check-out" />
+        <select class="form-control" id="hotel-star-rating">
+          <option value="">All Stars</option>
+          <option value="5">★★★★★</option>
+          <option value="4">★★★★ & Up</option>
+          <option value="3">★★★ & Up</option>
+        </select>
+        <button class="btn btn-light btn-book" id="hotel-search-btn">Search Hotels</button>
+      </div>
+
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="hotel-results-container">
+        <div class="col">
+          <div class="card bg-card text-white">
+            <img src="https://via.placeholder.com/400x180" class="card-img-top hotel-card-img" alt="Hotel 1">
+            <div class="card-body hotel-card-body">
+              <h5 class="card-title">Sunset Paradise Resort</h5>
+              <p class="card-text"><span class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span></p>
+              <p class="card-text">Free WiFi • Pool • Spa</p>
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <span class="fw-bold">₹5,200 / night</span>
+                <button class="btn btn-light btn-book">Book Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- More hotel cards... -->
+      </div>
+
+    </div>
+  </section>
+
+  <section id="holidays-page" class="page-content">
+    <div class="container">
+        <div class="header">
+            <h1>🌟 Discover India's Hidden Gems</h1>
+            <p>Unforgettable holiday packages across incredible destinations</p>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="select-all-container">
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                    <label for="selectAll">Select All</label>
+                </div>
+                
+                <div class="sort-container">
+                    <select id="sortSelect" onchange="sortPackages()">
+                        <option value="name">Sort by Name</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="location">Sort by Location</option>
+                        <option value="duration">Sort by Duration</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="selected-count" id="selectedCount" style="display: none;">
+                    0 selected
+                </div>
+                
+                <div class="bulk-actions">
+                    <button class="bulk-delete-btn" id="bulkDeleteBtn" onclick="bulkDeleteSelected()" disabled>
+                        🗑️ Delete Selected
+                    </button>
+                    <button class="clear-selection-btn" id="clearSelectionBtn" onclick="clearAllSelections()" disabled>
+                        ✖️ Clear Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="holiday-loader" class="holiday-loader">
+            <div class="spinner"></div>
+            <span>Loading amazing holiday packages...</span>
+        </div>
+
+        <div id="holiday-grid-container" class="holiday-grid-container">
+            <!-- Holiday cards will be inserted here -->
+        </div>
+
+        <div id="noPackages" class="no-packages" style="display: none;">
+            <h3>🎯 No Holiday Packages Available</h3>
+            <p>All packages have been removed. Refresh the page to reload the original packages.</p>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>⚠️ Confirm Deletion</h3>
+            <p id="modalMessage">Are you sure you want to delete this package?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-confirm" onclick="confirmDelete()">Yes, Delete</button>
+                <button class="modal-btn btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+  </section>
+
+  <section id="api-dashboard-page" class="page-content">
+    <div class="full-width-container">
+      <h2>API Usage Dashboard</h2>
+      <div class="row g-4">
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card bg-card text-white">
+            <div class="card-body">
+              <h5 class="card-title">Google Maps API</h5>
+              <div class="progress">
+                <div class="progress-bar" style="width: 50%"></div>
+              </div>
+              <p class="mt-2 mb-0 small">12,500 / 25,000 calls used</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card bg-card text-white">
+            <div class="card-body">
+              <h5 class="card-title">OpenWeather API</h5>
+              <div class="progress">
+                <div class="progress-bar" style="width: 45%"></div>
+              </div>
+              <p class="mt-2 mb-0 small">45,000 / 100,000 calls used</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card bg-card text-white">
+            <div class="card-body">
+              <h5 class="card-title">Currency Exchange API</h5>
+              <div class="progress">
+                <div class="progress-bar" style="width: 82%"></div>
+              </div>
+              <p class="mt-2 mb-0 small">82,000 / 100,000 calls used</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Optional JS for Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Sample JS: Price Range / Filter Behavior -->
+  <script>
+    document.getElementById('hotel-price-range')?.addEventListener('input', function(e) {
+      const val = e.target.value;
+      document.getElementById('price-range-output').textContent = `₹500 - ₹${val}`;
+    });
+  </script>
+
+    </main>
+
+    <!-- AI Assistant & Modals -->
+    <button class="ai-assistant-btn" id="ai-btn" title="Viharayatra AI Assistant"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+
+    <div class="modal-overlay" id="ai-modal">
+        <div class="modal-content">
+            <h2><i class="fa-solid fa-wand-magic-sparkles"></i> Viharayatra AI Assistant</h2>
+            <p>Try telling me what you want in plain English. For example: <strong>"show me the cheapest flight"</strong> or <strong>"find a non-stop vistara flight"</strong>.</p>
+            <input type="text" id="ai-query-input" placeholder="e.g., find the shortest duration flight">
+            <button id="ai-process-btn">Process Query</button>
+            <div id="ai-response"></div>
+            <button class="modal-close-btn" id="ai-modal-close">Close</button>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="booking-modal">
+        <div class="modal-content">
+            <h2>Booking Confirmation</h2>
+            <p>This is a demonstration. In a real application, you would be redirected to a secure payment gateway.</p>
+            <button class="modal-close-btn" id="booking-modal-close">Close</button>
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- MOCK DATA ---
+        const mockData = {
+            flights: [
+                { id: 1, carrier: 'IndiGo', from: 'DEL', to: 'BOM', departTime: '06:20', arriveTime: '08:25', duration: 125, stops: 0, price: 5800, logo: 'https://logo.clearbit.com/goindigo.in' },
+                { id: 2, carrier: 'Vistara', from: 'DEL', to: 'BOM', departTime: '07:00', arriveTime: '09:10', duration: 130, stops: 0, price: 6200, logo: 'https://logo.clearbit.com/airvistara.com' },
+                { id: 3, carrier: 'Air India', from: 'DEL', to: 'BOM', departTime: '08:45', arriveTime: '12:30', duration: 225, stops: 1, price: 4950, logo: 'https://logo.clearbit.com/airindia.in' },
+                { id: 4, carrier: 'SpiceJet', from: 'DEL', to: 'BOM', departTime: '10:15', arriveTime: '12:25', duration: 130, stops: 0, price: 5900, logo: 'https://logo.clearbit.com/spicejet.com' },
+                { id: 5, carrier: 'Vistara', from: 'DEL', to: 'BOM', departTime: '11:00', arriveTime: '13:05', duration: 125, stops: 0, price: 7100, logo: 'https://logo.clearbit.com/airvistara.com' },
+				{ id: 6, carrier: 'Vistara', from: 'DEL', to: 'BOM', departTime: '11:00', arriveTime: '13:05', duration: 125, stops: 0, price: 7100, logo: 'https://logo.clearbit.com/airvistara.com' }
+				
+            ],
+            buses: [
+                { id: 8, carrier: 'RedLine Express', from: 'MUM', to: 'PUN', departTime: '08:00', arriveTime: '11:30', duration: 210, stops: 0, price: 800, logo: 'https://logo.clearbit.com/redbus.in' },
+				{ id: 9, carrier: 'RedLine Express', from: 'MUM', to: 'PUN', departTime: '08:00', arriveTime: '11:30', duration: 210, stops: 0, price: 800, logo: 'https://logo.clearbit.com/redbus.in' },
+				{ id: 10, carrier: 'RedLine Express', from: 'MUM', to: 'PUN', departTime: '08:00', arriveTime: '11:30', duration: 210, stops: 0, price: 800, logo: 'https://logo.clearbit.com/redbus.in' }
+            ],
+            trains: [
+       		
+	{ "id": 11, "carrier": "Mumbai–Pune Shatabdi Express", "from": "BCT", "to": "PUNE", "departTime": "08:00", "arriveTime": "10:30", "duration": 150, "stops": 3, "price": 1500, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Mumbai–Pune Shatabdi Express", "BCT", "PUNE", "Mumbai", "Pune"] },
+  { "id": 12, "carrier": "Chennai–Bangalore Shatabdi Express", "from": "MAS", "to": "SBC", "departTime": "07:00", "arriveTime": "11:00", "duration": 240, "stops": 4, "price": 1600, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Chennai–Bangalore Shatabdi Express", "MAS", "SBC", "Chennai", "Bangalore"] },
+  { "id": 13, "carrier": "Hyderabad–Vijayawada Shatabdi Express", "from": "HYB", "to": "BZA", "departTime": "09:00", "arriveTime": "13:00", "duration": 240, "stops": 4, "price": 1700, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Hyderabad–Vijayawada Shatabdi Express", "HYB", "BZA", "Hyderabad", "Vijayawada"] },
+  { "id": 14, "carrier": "Kolkata–Durgapur Shatabdi Express", "from": "KOAA", "to": "DGR", "departTime": "06:00", "arriveTime": "09:30", "duration": 210, "stops": 4, "price": 1800, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Kolkata–Durgapur Shatabdi Express", "KOAA", "DGR", "Kolkata", "Durgapur"] },
+  { "id": 15, "carrier": "Ahmedabad–Surat Shatabdi Express", "from": "ADI", "to": "ST", "departTime": "10:00", "arriveTime": "12:00", "duration": 120, "stops": 2, "price": 1400, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Ahmedabad–Surat Shatabdi Express", "ADI", "ST", "Ahmedabad", "Surat"] },
+  { "id": 16, "carrier": "Jaipur–Delhi Shatabdi Express", "from": "JP", "to": "NDLS", "departTime": "07:30", "arriveTime": "11:00", "duration": 210, "stops": 3, "price": 1900, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Jaipur–Delhi Shatabdi Express", "JP", "NDLS", "Jaipur", "Delhi"] },
+  { "id": 17, "carrier": "Lucknow–Varanasi Shatabdi Express", "from": "LKO", "to": "BSB", "departTime": "08:00", "arriveTime": "11:30", "duration": 210, "stops": 3, "price": 1750, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Lucknow–Varanasi Shatabdi Express", "LKO", "BSB", "Lucknow", "Varanasi"] },
+  { "id": 18, "carrier": "Patna–Gaya Shatabdi Express", "from": "PNBE", "to": "GAYA", "departTime": "09:00", "arriveTime": "11:00", "duration": 120, "stops": 2, "price": 1300, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Patna–Gaya Shatabdi Express", "PNBE", "GAYA", "Patna", "Gaya"] },
+  { "id": 19, "carrier": "Bangalore–Mysore Shatabdi Express", "from": "SBC", "to": "MYS", "departTime": "07:00", "arriveTime": "09:30", "duration": 150, "stops": 3, "price": 1500, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Bangalore–Mysore Shatabdi Express", "SBC", "MYS", "Bangalore", "Mysore"] },
+  { "id": 20, "carrier": "Guwahati–Silchar Shatabdi Express", "from": "GHY", "to": "SCL", "departTime": "06:00", "arriveTime": "11:00", "duration": 300, "stops": 5, "price": 2100, "logo": "https://logo.clearbit.com/irctc.co.in", "allnames": ["Guwahati–Silchar Shatabdi Express", "GHY", "SCL", "Guwahati", "Silchar"] }
+				
+				
+            ],
+            cabs: [
+                { id: 21, carrier: 'CityGo Sedan', from: 'Airport', to: 'Downtown', departTime: 'On Demand', arriveTime: '~45 min', duration: 45, stops: 0, price: 1200, logo: 'https://logo.clearbit.com/uber.com' },
+				{ id: 22, carrier: 'CityGo Sedan', from: 'Airport', to: 'Downtown', departTime: 'On Demand', arriveTime: '~45 min', duration: 45, stops: 0, price: 1200, logo: 'https://logo.clearbit.com/uber.com' },
+				{ id: 23, carrier: 'CityGo Sedan', from: 'Airport', to: 'Downtown', departTime: 'On Demand', arriveTime: '~45 min', duration: 45, stops: 0, price: 1200, logo: 'https://logo.clearbit.com/uber.com' },
+				{ id: 24, carrier: 'CityGo Sedan', from: 'Airport', to: 'Downtown', departTime: 'On Demand', arriveTime: '~45 min', duration: 45, stops: 0, price: 1200, logo: 'https://logo.clearbit.com/uber.com' },
+				{ id: 25, carrier: 'CityGo Sedan', from: 'Airport', to: 'Downtown', departTime: 'On Demand', arriveTime: '~45 min', duration: 45, stops: 0, price: 1200, logo: 'https://logo.clearbit.com/uber.com' }
+            ],
+            bikeTaxis: [
+                { id: 31, carrier: 'Rapido Bike', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~20 min', duration: 20, stops: 0, price: 85, logo: 'https://logo.clearbit.com/rapido.bike' },
+                { id: 32, carrier: 'Uber Moto', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~22 min', duration: 22, stops: 0, price: 90, logo: 'https://logo.clearbit.com/uber.com' },
+				{ id: 33, carrier: 'Rapido Bike', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~20 min', duration: 20, stops: 0, price: 85, logo: 'https://logo.clearbit.com/rapido.bike' },
+                { id: 34, carrier: 'Uber Moto', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~22 min', duration: 22, stops: 0, price: 90, logo: 'https://logo.clearbit.com/uber.com' },
+				{ id: 35, carrier: 'Rapido Bike', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~20 min', duration: 20, stops: 0, price: 85, logo: 'https://logo.clearbit.com/rapido.bike' },
+                { id: 36, carrier: 'Uber Moto', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~22 min', duration: 22, stops: 0, price: 90, logo: 'https://logo.clearbit.com/uber.com' },
+				{ id: 37, carrier: 'Rapido Bike', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~20 min', duration: 20, stops: 0, price: 85, logo: 'https://logo.clearbit.com/rapido.bike' },
+                { id: 38, carrier: 'Uber Moto', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~22 min', duration: 22, stops: 0, price: 90, logo: 'https://logo.clearbit.com/uber.com' },
+				{ id: 39, carrier: 'Rapido Bike', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~20 min', duration: 20, stops: 0, price: 85, logo: 'https://logo.clearbit.com/rapido.bike' },
+                { id: 40, carrier: 'Uber Moto', from: 'Koramangala', to: 'Indiranagar', departTime: 'On Demand', arriveTime: '~22 min', duration: 22, stops: 0, price: 90, logo: 'https://logo.clearbit.com/uber.com' }
+            ],
+            hotels: [
+                { id: 41, name: 'The Grand Palace', rating: 5, reviews: 1450, price: 12500, amenities: ['Pool', 'WiFi', 'Gym', 'Spa'], image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' },
+                { id: 42, name: 'City Comfort Inn', rating: 4, reviews: 2800, price: 7200, amenities: ['WiFi', 'Restaurant'], image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' },
+                { id: 43, name: 'Budget Stay', rating: 3, reviews: 950, price: 3500, amenities: ['WiFi'], image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' },
+				{ id: 44, name: 'The Grand Palace', rating: 5, reviews: 1450, price: 12500, amenities: ['Pool', 'WiFi', 'Gym', 'Spa'], image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' },
+                { id: 45, name: 'City Comfort Inn', rating: 4, reviews: 2800, price: 7200, amenities: ['WiFi', 'Restaurant'], image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' },
+                { id: 46, name: 'Budget Stay', rating: 3, reviews: 950, price: 3500, amenities: ['WiFi'], image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' },
+				{ id: 47, name: 'The Grand Palace', rating: 5, reviews: 1450, price: 12500, amenities: ['Pool', 'WiFi', 'Gym', 'Spa'], image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' },
+                { id: 48, name: 'City Comfort Inn', rating: 4, reviews: 2800, price: 7200, amenities: ['WiFi', 'Restaurant'], image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' },
+                { id: 49, name: 'Budget Stay', rating: 3, reviews: 950, price: 3500, amenities: ['WiFi'], image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400' }
+				
+				
+            ]
+        };
+
+        // --- STATE MANAGEMENT ---
+        let currentPage = 'search';
+        let currentVehicle = 'flights';
+        let currentSort = 'recommended';
+
+        // --- DOM ELEMENTS ---
+        const mainTabs = document.getElementById('main-tabs');
+        const pages = document.querySelectorAll('.page-content');
+        const resultsContainer = document.getElementById('results-container');
+        const hotelResultsContainer = document.getElementById('hotel-results-container');
+        const priceSlider = document.getElementById('price-slider');
+        const priceValue = document.getElementById('price-value');
+        const stopsCheckboxes = document.querySelectorAll('input[name="stops"]');
+        const carrierFiltersContainer = document.getElementById('carrier-filters');
+        const carrierTitle = document.getElementById('carrier-title');
+        const sortBySelect = document.getElementById('sort-by');
+        const resultsSummary = document.getElementById('results-summary');
+        const noResultsMessage = document.getElementById('no-results-message');
+
+        // --- HELPER FUNCTIONS ---
+        const formatDuration = (minutes) => `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+        const formatPrice = (price) => `₹${price.toLocaleString('en-IN')}`;
+
+        // --- RENDERING FUNCTIONS ---
+        const createResultCard = (item) => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            card.innerHTML = `<div class="airline-info"><img src="${item.logo}" alt="${item.carrier}" onerror="this.src='https://via.placeholder.com/40';"><div class="info"><div class="name">${item.carrier}</div><div class="details">${item.from} → ${item.to}</div></div></div><div class="time-info"><div class="time">${item.departTime}</div><div class="city">${item.from}</div></div><div class="duration-info"><div class="duration">${typeof item.duration === 'number' ? formatDuration(item.duration) : item.duration}</div><div class="stops">${item.stops === 0 ? 'Non-Stop' : `${item.stops} Stop(s)`}</div></div><div class="time-info"><div class="time">${item.arriveTime}</div><div class="city">${item.to}</div></div><div class="book-button-container"><div class="price-info"><div class="price">${formatPrice(item.price)}</div><div class="note">per adult</div></div><button class="book-button">Book Now</button></div>`;
+            card.querySelector('.book-button').addEventListener('click', () => document.getElementById('booking-modal').classList.add('visible'));
+            return card;
+        };
+        
+        const createHotelCard = (hotel) => {
+            const card = document.createElement('div');
+            card.className = 'hotel-card';
+            const amenitiesHTML = hotel.amenities.map(a => `<span>${a}</span>`).join('');
+            const starsHTML = '★'.repeat(hotel.rating) + '☆'.repeat(5 - hotel.rating);
+
+            card.innerHTML = `<img src="${hotel.image}" alt="${hotel.name}"><div class="hotel-info"><h3>${hotel.name}</h3><div class="star-rating">${starsHTML}</div><p>${hotel.reviews.toLocaleString()} reviews</p><div class="amenities">${amenitiesHTML}</div></div><div class="hotel-pricing"><div class="price">${formatPrice(hotel.price)}</div><div class="note">per night</div><button class="book-button">View Deal</button></div>`;
+            card.querySelector('.book-button').addEventListener('click', () => document.getElementById('booking-modal').classList.add('visible'));
+            return card;
+        };
+
+        const renderResults = () => {
+            if (currentPage !== 'search') return;
+            let data = mockData[currentVehicle];
+            const selectedStops = Array.from(stopsCheckboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
+            const selectedCarriers = Array.from(document.querySelectorAll('#carrier-filters input:checked')).map(cb => cb.value);
+            const maxPrice = parseInt(priceSlider.value);
+            let filteredData = data.filter(item => item.price <= maxPrice && selectedStops.includes(item.stops) && (selectedCarriers.length === 0 || selectedCarriers.includes(item.carrier)));
+            switch(currentSort) {
+                case 'price_asc': filteredData.sort((a, b) => a.price - b.price); break;
+                case 'price_desc': filteredData.sort((a, b) => b.price - a.price); break;
+                case 'duration_asc': filteredData.sort((a, b) => a.duration - b.duration); break;
+            }
+            resultsContainer.innerHTML = '';
+            if (filteredData.length > 0) {
+                filteredData.forEach(item => resultsContainer.appendChild(createResultCard(item)));
+                noResultsMessage.style.display = 'none';
+            } else {
+                noResultsMessage.style.display = 'block';
+            }
+            resultsSummary.textContent = `Showing ${filteredData.length} of ${data.length} results`;
+        };
+        
+        const renderHotelResults = () => {
+            const hotels = mockData.hotels;
+            hotelResultsContainer.innerHTML = '';
+            hotels.forEach(hotel => hotelResultsContainer.appendChild(createHotelCard(hotel)));
+        };
+
+        const setupCarrierFilters = () => {
+            const data = mockData[currentVehicle] || [];
+            const carriers = [...new Set(data.map(item => item.carrier))];
+            carrierFiltersContainer.innerHTML = '';
+            carriers.forEach(carrier => {
+                const id = `carrier-${carrier.replace(/\s+/g, '-')}`;
+                carrierFiltersContainer.innerHTML += `<div class="filter-option"><input type="checkbox" id="${id}" name="carrier" value="${carrier}" checked><label for="${id}">${carrier}</label></div>`;
+            });
+            document.querySelectorAll('#carrier-filters input').forEach(checkbox => checkbox.addEventListener('change', renderResults));
+        };
+        
+        // --- PAGE & TAB SWITCHING LOGIC ---
+        const switchPage = (targetPage, targetVehicle = null) => {
+             currentPage = targetPage;
+
+            // Deactivate all tabs and pages
+            document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+            pages.forEach(p => p.classList.remove('active'));
+
+            // Activate the correct page
+            const activePageEl = document.getElementById(`${targetPage}-page`);
+            if(activePageEl) activePageEl.classList.add('active');
+
+            if (targetPage === 'search') {
+                if (targetVehicle) currentVehicle = targetVehicle;
+                document.querySelector(`.nav-item[data-vehicle="${currentVehicle}"]`).classList.add('active');
+                const title = currentVehicle.charAt(0).toUpperCase() + currentVehicle.slice(1);
+                carrierTitle.textContent = {flights: 'Airlines', buses: 'Operators', trains: 'Train Types', cabs: 'Cab Types', bikeTaxis: 'Bike Services'}[currentVehicle] || 'Carriers';
+                setupCarrierFilters();
+                renderResults();
+            } else if (targetPage === 'hotels') {
+                 document.querySelector('.nav-item[data-page="hotels"]').classList.add('active');
+                 renderHotelResults();
+            }
+        };
+
+        mainTabs.addEventListener('click', (e) => {
+            e.preventDefault();
+            const navItem = e.target.closest('.nav-item');
+            if (navItem) {
+                switchPage(navItem.dataset.page, navItem.dataset.vehicle);
+            }
+        });
+        
+        // --- EVENT LISTENERS ---
+        priceSlider.addEventListener('input', (e) => priceValue.textContent = `Up to ${formatPrice(parseInt(e.target.value))}`);
+        priceSlider.addEventListener('change', renderResults);
+        stopsCheckboxes.forEach(checkbox => checkbox.addEventListener('change', renderResults));
+        sortBySelect.addEventListener('change', (e) => { currentSort = e.target.value; renderResults(); });
+
+        // --- AI MODAL LOGIC ---
+        const aiModal = document.getElementById('ai-modal');
+        const aiResponseEl = document.getElementById('ai-response');
+        document.getElementById('ai-btn').addEventListener('click', () => aiModal.classList.add('visible'));
+        document.getElementById('ai-modal-close').addEventListener('click', () => aiModal.classList.remove('visible'));
+        document.getElementById('ai-process-btn').addEventListener('click', () => {
+            const query = document.getElementById('ai-query-input').value.toLowerCase();
+            aiResponseEl.textContent = 'Processing...';
+
+            // Simulate AI processing
+            setTimeout(() => {
+                let response = "I've updated the search for you.";
+                switchPage('search', 'flights'); // Default to flights search
+                
+                if (query.includes('cheap') || query.includes('lowest')) {
+                    sortBySelect.value = 'price_asc';
+                } else if (query.includes('short') || query.includes('fastest')) {
+                    sortBySelect.value = 'duration_asc';
+                } else {
+                     sortBySelect.value = 'recommended';
+                }
+                
+                if (query.includes('non-stop') || query.includes('direct')) {
+                    stopsCheckboxes.forEach(cb => cb.checked = (cb.value === '0'));
+                }
+                
+                mockData.flights.forEach(f => {
+                    if (query.includes(f.carrier.toLowerCase())) {
+                        document.querySelectorAll('#carrier-filters input').forEach(cb => {
+                            cb.checked = (cb.value === f.carrier);
+                        });
+                        response += ` Filtering by ${f.carrier}.`
+                    }
+                });
+                
+                currentSort = sortBySelect.value;
+                renderResults();
+                aiResponseEl.textContent = response;
+                setTimeout(() => aiModal.classList.remove('visible'), 1500);
+
+            }, 1000);
+        });
+        
+        // --- SIMULATED API CALLS ---
+        const fetchSimulatedAPIs = () => {
+            // Weather API Demo
+            setTimeout(() => {
+                document.getElementById('weather-info').innerHTML = `<i class="fa-solid fa-sun" style="color: #ffc300;"></i> 28°C, Clear Skies`;
+            }, 1500);
+            
+            // Currency API Demo
+            setTimeout(() => {
+                 document.getElementById('currency-info').textContent = 'Live Rates (USD to INR)';
+                 document.getElementById('currency-result').textContent = `100 USD = ${formatPrice(8310)}`;
+            }, 2000);
+        }
+
+        // --- INITIALIZATION ---
+        document.getElementById('booking-modal-close').addEventListener('click', () => document.getElementById('booking-modal').classList.remove('visible'));
+        switchPage('search', 'flights'); // Start on flights search page
+        fetchSimulatedAPIs(); // "Fetch" data for widgets
+    });
+	
+	
+	
+	// Complete holiday packages data with reliable image sources
+        let holidayPackages = [
+            {
+                id: 1,
+                name: "Taj Mahal Heritage Tour",
+                location: "Agra, Uttar Pradesh",
+                days: "2 Days / 1 Night",
+                price: 5500,
+                image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+                description: "Explore the majestic Taj Mahal and its rich history.",
+                highlights: ["UNESCO World Heritage Site", "Mughal Architecture", "Sunset Views", "Local Cuisine"]
+            },
+            {
+                id: 2,
+                name: "Golden Temple Visit",
+                location: "Amritsar, Punjab",
+                days: "2 Days / 1 Night",
+                price: 5000,
+                image: "https://images.unsplash.com/photo-1605649487212-47bdab064cf7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Experience the spiritual ambiance of the Golden Temple.",
+                highlights: ["Sacred Sikh Temple", "Free Community Kitchen", "Golden Architecture", "Spiritual Experience"]
+            },
+            {
+                id: 3,
+                name: "Delhi City Highlights",
+                location: "Delhi",
+                days: "3 Days / 2 Nights",
+                price: 7500,
+                image: "https://images.unsplash.com/photo-1587135941948-670b381f08ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Visit iconic landmarks like India Gate and Qutub Minar.",
+                highlights: ["India Gate", "Red Fort", "Qutub Minar", "Street Food Tour"]
+            },
+            {
+                id: 4,
+                name: "Kashmir Valley Retreat",
+                location: "Srinagar, Jammu & Kashmir",
+                days: "4 Days / 3 Nights",
+                price: 22000,
+                image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Relax amidst the serene landscapes of Kashmir.",
+                highlights: ["Houseboat Stay", "Dal Lake", "Mughal Gardens", "Shikara Rides"]
+            },
+            {
+                id: 5,
+                name: "Jaipur Royal Tour",
+                location: "Jaipur, Rajasthan",
+                days: "3 Days / 2 Nights",
+                price: 8000,
+                image: "https://images.unsplash.com/photo-1599661046827-dacde6230bdb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Discover the royal heritage of Jaipur's palaces.",
+                highlights: ["Amber Fort", "City Palace", "Hawa Mahal", "Pink City Tour"]
+            },
+            {
+                id: 6,
+                name: "Mumbai City Exploration",
+                location: "Mumbai, Maharashtra",
+                days: "3 Days / 2 Nights",
+                price: 7000,
+                image: "https://images.unsplash.com/photo-1595658658481-d53d3f999875?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Experience the vibrant culture and nightlife of Mumbai.",
+                highlights: ["Gateway of India", "Marine Drive", "Bollywood Tours", "Street Food"]
+            },
+            {
+                id: 7,
+                name: "Goa Beach Holiday",
+                location: "Goa",
+                days: "4 Days / 3 Nights",
+                price: 9500,
+                image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Enjoy the sunny beaches and vibrant nightlife of Goa.",
+                highlights: ["Pristine Beaches", "Water Sports", "Beach Parties", "Portuguese Heritage"]
+            },
+            {
+                id: 8,
+                name: "Kerala Backwaters Cruise",
+                location: "Alleppey, Kerala",
+                days: "3 Days / 2 Nights",
+                price: 12000,
+                image: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Sail through the tranquil backwaters of Kerala.",
+                highlights: ["Houseboat Cruise", "Coconut Groves", "Ayurvedic Massage", "Traditional Cuisine"]
+            },
+            {
+                id: 9,
+                name: "Rajasthan Desert Safari",
+                location: "Jaisalmer, Rajasthan",
+                days: "3 Days / 2 Nights",
+                price: 10500,
+                image: "https://images.unsplash.com/photo-1559181567-c3190ca9959b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Experience the thrill of a desert safari in Rajasthan.",
+                highlights: ["Camel Safari", "Desert Camping", "Folk Performances", "Golden Fort"]
+            },
+            {
+                id: 10,
+                name: "Andaman Islands Escape",
+                location: "Port Blair, Andaman & Nicobar Islands",
+                days: "5 Days / 4 Nights",
+                price: 18000,
+                image: "https://images.unsplash.com/photo-1539650116574-75c0c6d73a0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Relax on pristine beaches and explore marine life.",
+                highlights: ["Radhanagar Beach", "Scuba Diving", "Cellular Jail", "Ross Island"]
+            },
+            {
+                id: 11,
+                name: "Darjeeling Tea Tour",
+                location: "Darjeeling, West Bengal",
+                days: "3 Days / 2 Nights",
+                price: 9000,
+                image: "https://images.unsplash.com/photo-1597149844851-10d4c8160e43?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Explore tea gardens and scenic mountain views.",
+                highlights: ["Tea Garden Tours", "Toy Train Ride", "Tiger Hill Sunrise", "Himalayan Views"]
+            },
+            {
+                id: 12,
+                name: "Mysore Palace Visit",
+                location: "Mysore, Karnataka",
+                days: "2 Days / 1 Night",
+                price: 6500,
+                image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Discover the grandeur of Mysore Palace.",
+                highlights: ["Royal Palace", "Illumination Show", "Chamundi Hills", "Sandalwood Shopping"]
+            },
+            {
+                id: 13,
+                name: "Varanasi Spiritual Tour",
+                location: "Varanasi, Uttar Pradesh",
+                days: "3 Days / 2 Nights",
+                price: 8000,
+                image: "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Experience the spiritual essence of Varanasi.",
+                highlights: ["Ganga Aarti", "Ancient Temples", "Boat Rides", "Spiritual Ceremonies"]
+            },
+            {
+                id: 14,
+                name: "Coorg Nature Retreat",
+                location: "Coorg, Karnataka",
+                days: "3 Days / 2 Nights",
+                price: 8500,
+                image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Enjoy lush greenery and waterfalls.",
+                highlights: ["Coffee Plantations", "Abbey Falls", "Nature Walks", "Spice Gardens"]
+            },
+            {
+                id: 15,
+                name: "Hampi Heritage Walk",
+                location: "Hampi, Karnataka",
+                days: "2 Days / 1 Night",
+                price: 7000,
+                image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                description: "Explore ancient ruins and temples.",
+                highlights: ["Vijayanagara Empire", "Stone Chariot", "Temple Architecture", "Historical Monuments"]
+            }
+        ];
+
+        // Global variables
+        let selectedPackages = new Set();
+        let draggedElement = null;
+        let deleteCallback = null;
+
+        // Initialize application
+        function init() {
+            setTimeout(() => {
+                displayHolidayPackages();
+                initializeDragAndDrop();
+            }, 1500);
+        }
+
+        // Display holiday packages
+        function displayHolidayPackages() {
+            try {
+                const container = document.getElementById("holiday-grid-container");
+                const loader = document.getElementById("holiday-loader");
+                const noPackages = document.getElementById("noPackages");
+
+                loader.style.display = "none";
+
+                if (holidayPackages.length === 0) {
+                    container.style.display = "none";
+                    noPackages.style.display = "block";
+                    updateControlPanel();
+                    return;
+                }
+
+                container.style.display = "grid";
+                noPackages.style.display = "none";
+                container.innerHTML = "";
+
+                holidayPackages.forEach((pkg, index) => {
+                    const cardEl = document.createElement("div");
+                    cardEl.className = "holiday-card";
+                    cardEl.draggable = true;
+                    cardEl.dataset.id = pkg.id;
+                    cardEl.dataset.index = index;
+
+                    cardEl.innerHTML = `
+                        <input type="checkbox" class="card-checkbox" onchange="toggleCardSelection(${pkg.id})" ${selectedPackages.has(pkg.id) ? 'checked' : ''}>
+                        <button class="delete-btn" onclick="deletePackage(${pkg.id})" title="Delete Package">×</button>
+                        <img src="${pkg.image}" alt="${pkg.name}" loading="lazy" onerror="handleImageError(this, '${pkg.name}')">
+                        <div class="holiday-card-body">
+                            <h3>${pkg.name}</h3>
+                            <p class="location-duration"><strong>${pkg.location}</strong> • ${pkg.days}</p>
+                            <p class="description">${pkg.description}</p>
+                            <p class="highlights">${pkg.highlights.join(" • ")}</p>
+                            <div class="price-book">
+                                <span class="price">${pkg.price.toLocaleString()}</span>
+                                <button class="book-btn" onclick="handleBooking(event, '${pkg.name}')">Book Now</button>
+                            </div>
+                        </div>
+                    `;
+
+                    container.appendChild(cardEl);
+                });
+
+                updateSelectAllState();
+                updateControlPanel();
+
+            } catch (error) {
+                console.error('Error displaying holiday packages:', error);
+                showMessage('Error loading packages. Please refresh the page.', 'error');
+            }
+        }
+
+        // Handle image errors
+        function handleImageError(img, packageName) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 350;
+            canvas.height = 220;
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 350, 220);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 350, 220);
+            
+            // Add text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(packageName, 175, 100);
+            ctx.font = '16px Arial';
+            ctx.fillText('Holiday Package', 175, 130);
+            
+            img.src = canvas.toDataURL();
+        }
+
+        // Drag and Drop functionality
+        function initializeDragAndDrop() {
+            const container = document.getElementById('holiday-grid-container');
+            
+            container.addEventListener('dragstart', handleDragStart);
+            container.addEventListener('dragover', handleDragOver);
+            container.addEventListener('dragenter', handleDragEnter);
+            container.addEventListener('dragleave', handleDragLeave);
+            container.addEventListener('drop', handleDrop);
+            container.addEventListener('dragend', handleDragEnd);
+        }
+
+        function handleDragStart(e) {
+            if (!e.target.classList.contains('holiday-card')) return;
+            
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.outerHTML);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('holiday-card') && e.target !== draggedElement) {
+                e.target.classList.add('drop-zone', 'drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            if (e.target.classList.contains('holiday-card')) {
+                e.target.classList.remove('drop-zone', 'drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            if (e.target.classList.contains('holiday-card') && e.target !== draggedElement) {
+                const draggedId = parseInt(draggedElement.dataset.id);
+                const targetId = parseInt(e.target.dataset.id);
+                
+                // Find indices in the array
+                const draggedIndex = holidayPackages.findIndex(pkg => pkg.id === draggedId);
+                const targetIndex = holidayPackages.findIndex(pkg => pkg.id === targetId);
+                
+                // Swap elements in array
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    [holidayPackages[draggedIndex], holidayPackages[targetIndex]] = 
+                    [holidayPackages[targetIndex], holidayPackages[draggedIndex]];
+                    
+                    // Redisplay packages
+                    displayHolidayPackages();
+                    initializeDragAndDrop();
+                    
+                    showMessage('Packages reordered successfully!', 'success');
+                }
+            }
+            
+            // Clean up
+            document.querySelectorAll('.holiday-card').forEach(card => {
+                card.classList.remove('drop-zone', 'drag-over');
+            });
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        // Toggle card selection
+        function toggleCardSelection(packageId) {
+            if (selectedPackages.has(packageId)) {
+                selectedPackages.delete(packageId);
+            } else {
+                selectedPackages.add(packageId);
+            }
+            
+            updateCardSelection(packageId);
+            updateSelectAllState();
+            updateControlPanel();
+        }
+
+        // Update card visual selection
+        function updateCardSelection(packageId) {
+            const card = document.querySelector(`[data-id="${packageId}"]`);
+            if (card) {
+                if (selectedPackages.has(packageId)) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            }
+        }
+
+        // Toggle select all
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            
+            if (selectAllCheckbox.checked) {
+                // Select all packages
+                holidayPackages.forEach(pkg => selectedPackages.add(pkg.id));
+            } else {
+                // Deselect all packages
+                selectedPackages.clear();
+            }
+            
+            updateAllCardSelections();
+            updateControlPanel();
+        }
+
+        // Update all card selections
+        function updateAllCardSelections() {
+            document.querySelectorAll('.holiday-card').forEach(card => {
+                const packageId = parseInt(card.dataset.id);
+                const checkbox = card.querySelector('.card-checkbox');
+                
+                if (selectedPackages.has(packageId)) {
+                    card.classList.add('selected');
+                    checkbox.checked = true;
+                } else {
+                    card.classList.remove('selected');
+                    checkbox.checked = false;
+                }
+            });
+        }
+
+        // Update select all checkbox state
+        function updateSelectAllState() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const totalPackages = holidayPackages.length;
+            const selectedCount = selectedPackages.size;
+            
+            if (selectedCount === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (selectedCount === totalPackages) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+
+        // Update control panel
+        function updateControlPanel() {
+            const selectedCount = selectedPackages.size;
+            const selectedCountEl = document.getElementById('selectedCount');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+            
+            if (selectedCount > 0) {
+                selectedCountEl.style.display = 'block';
+                selectedCountEl.textContent = `${selectedCount} selected`;
+                bulkDeleteBtn.disabled = false;
+                clearSelectionBtn.disabled = false;
+            } else {
+                selectedCountEl.style.display = 'none';
+                bulkDeleteBtn.disabled = true;
+                clearSelectionBtn.disabled = true;
+            }
+        }
+
+        // Clear all selections
+        function clearAllSelections() {
+            selectedPackages.clear();
+            updateAllCardSelections();
+            updateSelectAllState();
+            updateControlPanel();
+            showMessage('All selections cleared', 'success');
+        }
+
+        // Bulk delete selected packages
+        function bulkDeleteSelected() {
+            if (selectedPackages.size === 0) return;
+            
+            const count = selectedPackages.size;
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = `Are you sure you want to delete ${count} selected package${count > 1 ? 's' : ''}?`;
+            
+            deleteCallback = () => {
+                // Remove selected packages from array
+                holidayPackages = holidayPackages.filter(pkg => !selectedPackages.has(pkg.id));
+                selectedPackages.clear();
+                
+                // Redisplay packages
+                displayHolidayPackages();
+                initializeDragAndDrop();
+                
+                showMessage(`${count} package${count > 1 ? 's' : ''} deleted successfully!`, 'success');
+            };
+            
+            showModal();
+        }
+
+        // Delete individual package
+        function deletePackage(packageId) {
+            const pkg = holidayPackages.find(p => p.id === packageId);
+            if (!pkg) return;
+            
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = `Are you sure you want to delete "${pkg.name}"?`;
+            
+            deleteCallback = () => {
+                holidayPackages = holidayPackages.filter(p => p.id !== packageId);
+                selectedPackages.delete(packageId);
+                
+                displayHolidayPackages();
+                initializeDragAndDrop();
+                
+                showMessage(`"${pkg.name}" deleted successfully!`, 'success');
+            };
+            
+            showModal();
+        }
+
+        // Sort packages
+        function sortPackages() {
+            const sortSelect = document.getElementById('sortSelect');
+            const sortBy = sortSelect.value;
+            
+            switch (sortBy) {
+                case 'name':
+                    holidayPackages.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'price-low':
+                    holidayPackages.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price-high':
+                    holidayPackages.sort((a, b) => b.price - a.price);
+                    break;
+                case 'location':
+                    holidayPackages.sort((a, b) => a.location.localeCompare(b.location));
+                    break;
+                case 'duration':
+                    holidayPackages.sort((a, b) => {
+                        const aDays = parseInt(a.days.split(' ')[0]);
+                        const bDays = parseInt(b.days.split(' ')[0]);
+                        return aDays - bDays;
+                    });
+                    break;
+                default:
+                    break;
+            }
+            
+            displayHolidayPackages();
+            initializeDragAndDrop();
+            showMessage('Packages sorted successfully!', 'success');
+        }
+
+        // Handle booking
+        function handleBooking(event, packageName) {
+            event.stopPropagation();
+            showMessage(`Booking initiated for "${packageName}"!`, 'success');
+        }
+
+        // Show modal
+        function showModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'block';
+            
+            // Close modal when clicking outside
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+        }
+
+        // Close modal
+        function closeModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'none';
+            deleteCallback = null;
+        }
+
+        // Confirm delete
+        function confirmDelete() {
+            if (deleteCallback) {
+                deleteCallback();
+                deleteCallback = null;
+            }
+            closeModal();
+        }
+
+        // Show message
+        function showMessage(text, type = 'success') {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = text;
+            
+            document.body.appendChild(messageEl);
+            
+            // Show message
+            setTimeout(() => {
+                messageEl.classList.add('show');
+            }, 100);
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+                setTimeout(() => {
+                    messageEl.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl/Cmd + A to select all
+            if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
+                event.preventDefault();
+                const selectAllCheckbox = document.getElementById('selectAll');
+                selectAllCheckbox.checked = true;
+                toggleSelectAll();
+            }
+            
+            // Delete key to delete selected
+            if (event.key === 'Delete' && selectedPackages.size > 0) {
+                event.preventDefault();
+                bulkDeleteSelected();
+            }
+            
+            // Escape key to close modal
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Initialize application when page loads
+        document.addEventListener('DOMContentLoaded', init);
+	
+    </script>
+</body>
+</html>
